@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,41 +31,10 @@ public class UserController {
         return userService.getUser(id);
     }
 
-    @GetMapping()
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
-    }
-
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> saveUser(
-            @RequestPart ("password") String password,
-            @RequestPart ("lastName") String lastName,
-            @RequestPart ("firstName") String firstName,
-            @RequestPart ("email") String email,
-            @RequestPart ("profilePic") MultipartFile profilePic
-    ) {
-
-        try {
-            byte[] byteProPic = profilePic.getBytes();
-            String base64ProPic = AppUtil.profilePicToBase64(byteProPic);
-
-            var buildUserDTO = new UserDTO();
-
-            String userID = AppUtil.generateUserID();
-            buildUserDTO.setUserID(userID);
-            buildUserDTO.setPassword(password);
-            buildUserDTO.setFirstName(firstName);
-            buildUserDTO.setLastName(lastName);
-            buildUserDTO.setEmail(email);
-            buildUserDTO.setProfilePic(base64ProPic);
-            buildUserDTO.setNoteDTO(null);
-            userService.saveUser(buildUserDTO);
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        } catch (DataPersistException e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/{userID}")
@@ -99,8 +69,6 @@ public class UserController {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-
     }
 
     @DeleteMapping(value = "/{id}")

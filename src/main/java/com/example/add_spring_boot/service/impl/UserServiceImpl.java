@@ -10,6 +10,7 @@ import com.example.add_spring_boot.service.UserService;
 import com.example.add_spring_boot.util.Mapping;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -67,5 +68,12 @@ public class UserServiceImpl implements UserService {
         } else {
             userDAO.deleteById(ID);
         }
+    }
+
+    @Override
+    public UserDetailsService userDetailsService() {
+        return username ->
+                userDAO.findByEmail(username)
+                        .orElseThrow(() -> new UserNotFoundException("User Not Found!"));
     }
 }
